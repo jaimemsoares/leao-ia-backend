@@ -1,8 +1,9 @@
-
 from flask import Flask, request
 import requests
-from utils.sentimento import analisar_sentimento, avaliar_impacto_economico
+from utils.sentimento import analisar_sentimento
+from utils.economia import avaliar_impacto_economico
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 
@@ -38,7 +39,7 @@ def webhook():
     send_telegram_message(mensagem_final.strip())
     return {"status": "Mensagem enviada com sucesso"}, 200
    
-    import os
+    
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
