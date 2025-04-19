@@ -29,14 +29,17 @@ def webhook():
         data = request.data.decode('utf-8')
         data = {"message": data}
 
+    print("🔍 DADOS RECEBIDOS:", data)  # 👈 Ajuda no debug
+
     mensagem = data.get("message", "")
-    ativo = data.get("ticker", "Ativo Desconhecido")
-    timeframe = data.get("interval", "Período desconhecido")
-    preco = data.get("close", "N/A")
+    ativo = data.get("ticker") or data.get("symbol") or "Ativo Desconhecido"
+    timeframe = data.get("interval") or data.get("timeframe") or "Período desconhecido"
+    preco = data.get("close") or data.get("price") or "N/A"
 
+    # Simulação de dados externos
     texto_externo = "Mercado otimista com crescimento apesar da inflação"
-    ia_resposta = analisar_texto_com_openai(texto_externo)
-
+    sentimento = analisar_sentimento(texto_externo)
+    economia = avaliar_impacto_economico(texto_externo)
     agora = datetime.now().strftime("%d/%m %H:%M")
 
     direcao = "🟢 *COMPRA*" if "COMPRA" in mensagem.upper() else "🔴 *VENDA*"
@@ -45,13 +48,13 @@ def webhook():
 📡 *LEÃO IA* - Alerta Detectado
 {direcao} detectada em *{ativo}* ({timeframe})
 📈 *Preço*: {preco}
-🧠 *Sentimento*: {ia_resposta}
-🌎 *Impacto Econômico*: {ia_resposta}
+🧠 *Sentimento*: {sentimento}
+🌎 *Impacto Econômico*: {economia}
 ⏰ *Horário*: {agora}
 """
-
     send_telegram_message(mensagem_final.strip())
     return {"status": "Mensagem enviada com sucesso"}, 200
+
 
 
 if __name__ == "__main__":
