@@ -1,7 +1,7 @@
 from flask import Flask, request
 import requests
-from utils.sentimento import analisar_sentimento
-from utils.economia import avaliar_impacto_economico
+from utils.openai_ia import analisar_texto_com_openai
+
 from datetime import datetime
 import os
 
@@ -35,8 +35,8 @@ def webhook():
     preco = data.get("close", "N/A")
 
     texto_externo = "Mercado otimista com crescimento apesar da inflação"
-    sentimento = analisar_sentimento(texto_externo)
-    economia = avaliar_impacto_economico(texto_externo)
+    ia_resposta = analisar_texto_com_openai(texto_externo)
+
     agora = datetime.now().strftime("%d/%m %H:%M")
 
     direcao = "🟢 *COMPRA*" if "COMPRA" in mensagem.upper() else "🔴 *VENDA*"
@@ -45,8 +45,8 @@ def webhook():
 📡 *LEÃO IA* - Alerta Detectado
 {direcao} detectada em *{ativo}* ({timeframe})
 📈 *Preço*: {preco}
-🧠 *Sentimento*: {sentimento}
-🌎 *Impacto Econômico*: {economia}
+🧠 *Sentimento*: {ia_resposta}
+🌎 *Impacto Econômico*: {ia_resposta}
 ⏰ *Horário*: {agora}
 """
 
