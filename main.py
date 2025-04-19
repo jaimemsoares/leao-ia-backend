@@ -6,8 +6,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-BOT_TOKEN = "SEU_BOT_TOKEN_AQUI"
-CHAT_ID = "SEU_CHAT_ID_AQUI"
+BOT_TOKEN = "7729732058:AAGmtgMI2LEso_ifOxEb4__I2rcM_Dr6Dwk"
+CHAT_ID = "-1002466281231"
 
 def send_telegram_message(mensagem):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
