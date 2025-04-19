@@ -36,6 +36,7 @@ def webhook():
 🌎 *Impacto Econômico*: {economia}
 ⏰ *Horário*: {agora}"""
     send_telegram_message(mensagem_final.strip())
+    return {"status": "Mensagem enviada com sucesso"}, 200
    
     import os
 
@@ -43,5 +44,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
     
-     return {"status": "Mensagem enviada com sucesso"}, 200
+     
 
