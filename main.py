@@ -1,7 +1,6 @@
 from flask import Flask, request
 import requests
 from utils.sentimento import analisar_sentimento
-from utils.economia import avaliar_impacto_economico
 from datetime import datetime
 import os
 
@@ -9,7 +8,6 @@ app = Flask(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
-
 
 def send_telegram_message(mensagem):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -20,7 +18,6 @@ def send_telegram_message(mensagem):
     }
     requests.post(url, json=payload)
 
-
 @app.route('/leao-ia', methods=['POST'])
 def webhook():
     try:
@@ -30,24 +27,33 @@ def webhook():
         data = {"message": data}
 
     mensagem = data.get("message", "")
-    ativo = data.get("ticker", "Ativo Desconhecido")
-    timeframe = data.get("interval", "Período desconhecido")
+    ativo = data.get("ticker", "Desconhecido").upper()
+    timeframe = data.get("interval", "Desconhecido")
     preco = data.get("close", "N/A")
 
-    texto_externo = "Mercado otimista com crescimento apesar da inflação"
-    sentimento = analisar_sentimento(texto_externo)
-    economia = avaliar_impacto_economico(texto_externo)
-    agora = datetime.now().strftime("%d/%m %H:%M")
+    sentimento = analisar_sentimento()
+    agora_data = datetime.now().strftime("📅 %d/%m")
+    agora_hora = datetime.now().strftime("⏰ %H:%M")
 
-    direcao = "🟢 *COMPRA*" if "COMPRA" in mensagem.upper() else "🔴 *VENDA*"
+    if "COMPRA" in mensagem.upper():
+        direcao = "🟢 *COMPRA*"
+    elif "VENDA" in mensagem.upper():
+        direcao = "🔴 *VENDA*"
+    else:
+        direcao = "⚪ SINAL DESCONHECIDO"
+
+    tendencia = "📊 Tendência do ativo: A favor da tendência" if "A FAVOR" in mensagem.upper() else "📊 Tendência do ativo: ⚠️ Contra a tendência"
+    tendencia_btc = "Alta" if "A FAVOR" in mensagem.upper() else "Baixa"
 
     mensagem_final = f"""
-📡 *LEÃO IA* - Alerta Detectado
-{direcao} detectada em *{ativo}* ({timeframe})
-📈 *Preço*: {preco}
-🧠 *Sentimento*: {sentimento}
-🌎 *Impacto Econômico*: {economia}
-⏰ *Horário*: {agora}
+📡 *LEÃO IA* 🦁 - Alerta Detectado
+{direcao}   |   *{ativo}*
+{tendencia}  
+🧠 Sentimento: {sentimento}  
+⏱️ Time Frame: {timeframe}  
+📈 Preço: {preco}  
+📊 Tendência do BTC: {tendencia_btc}  
+{agora_data} | {agora_hora}
 """
 
     send_telegram_message(mensagem_final.strip())
