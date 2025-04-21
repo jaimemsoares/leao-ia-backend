@@ -1,20 +1,18 @@
-import openai
-import os
+import requests
 
-openai.api_key = os.environ.get("OPENAI_API_KEY")
-
-client = openai.OpenAI()
-
-def analisar_sentimento(texto):
+def analisar_sentimento(texto=None):
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Você é um analista de sentimento de mercado financeiro. Classifique o texto como Positivo 😃, Negativo 😞 ou Neutro 😐."},
-                {"role": "user", "content": texto}
-            ]
-        )
-        resultado = response.choices[0].message.content.strip()
-        return resultado
+        response = requests.get("https://open-api.coinglass.com/api/pro/v1/fgi/index")
+        if response.status_code == 200:
+            fgi = response.json().get("data", {})
+            valor = fgi.get("now", 50)
+            if valor >= 70:
+                return "😃 Positivo para compra"
+            elif valor <= 30:
+                return "😡 Positivo para venda"
+            else:
+                return "😐 Neutro"
+        else:
+            return "⚠️ Erro Coinglass"
     except Exception as e:
-        return f"⚠️ Erro IA: {str(e)}"
+        return f"⚠️ Erro Sentimento: {str(e)}"
