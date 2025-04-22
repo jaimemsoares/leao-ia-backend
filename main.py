@@ -3,6 +3,7 @@ from utils.sentimento import analisar_sentimento
 from utils.tendencia import analisar_tendencia_btc
 from datetime import datetime
 import pytz
+import os
 
 app = Flask(__name__)
 
