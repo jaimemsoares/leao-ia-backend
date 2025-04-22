@@ -1,65 +1,40 @@
-from flask import Flask, request
-import requests
+from flask import Flask, request, jsonify
 from utils.sentimento import analisar_sentimento
+from utils.tendencia import analisar_tendencia_btc
 from datetime import datetime
-import os
+import pytz
 
 app = Flask(__name__)
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = os.environ.get("CHAT_ID")
-
-def send_telegram_message(mensagem):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": CHAT_ID,
-        "text": mensagem,
-        "parse_mode": "Markdown"
-    }
-    requests.post(url, json=payload)
-
-@app.route('/leao-ia', methods=['POST'])
-def webhook():
-    try:
-        data = request.get_json(force=True)
-    except:
-        data = request.data.decode('utf-8')
-        data = {"message": data}
-
-    mensagem = data.get("message", "")
-    ativo = data.get("ticker", "Desconhecido").upper()
-    timeframe = data.get("interval", "Desconhecido")
+@app.route("/leao-ia", methods=["POST"])
+def receber_alerta():
+    data = request.json
+    ticker = data.get("ticker", "Ativo Desconhecido")
     preco = data.get("close", "N/A")
+    intervalo = data.get("interval", "Período desconhecido")
+    direcao = "🟢 COMPRA" if "COMPRA" in data.get("message", "") else "🔴 VENDA"
 
     sentimento = analisar_sentimento()
-    agora_data = datetime.now().strftime("📅 %d/%m")
-    agora_hora = datetime.now().strftime("⏰ %H:%M")
+    tendencia_btc = analisar_tendencia_btc()
 
-    if "COMPRA" in mensagem.upper():
-        direcao = "🟢 *COMPRA*"
-    elif "VENDA" in mensagem.upper():
-        direcao = "🔴 *VENDA*"
-    else:
-        direcao = "⚪ SINAL DESCONHECIDO"
-
-    tendencia = "📊 Tendência do ativo: A favor da tendência" if "A FAVOR" in mensagem.upper() else "📊 Tendência do ativo: ⚠️ Contra a tendência"
-    tendencia_btc = "Alta" if "A FAVOR" in mensagem.upper() else "Baixa"
+    # Horário formatado
+    fuso = pytz.timezone("America/Sao_Paulo")
+    agora = datetime.now(fuso)
+    hora = agora.strftime("%H:%M")
+    data_br = agora.strftime("%d/%m")
 
     mensagem_final = f"""
 📡 *LEÃO IA* 🦁 - Alerta Detectado
-{direcao}   |   *{ativo}*
-{tendencia}  
-🧠 Sentimento: {sentimento}  
-⏱️ Time Frame: {timeframe}  
-📈 Preço: {preco}  
-📊 Tendência do BTC: {tendencia_btc}  
-{agora_data} | {agora_hora}
+{direcao}   |   *{ticker}*
+📊 Tendência do ativo: {tendencia_btc['ativo']}
+🧠 Sentimento: {sentimento}
+⏱️ Time Frame: {intervalo}
+📈 Preço: {preco}
+📊 Tendência Exclusiva do BTC: {tendencia_btc['btc']}
+📅 {data_br} | ⏰ {hora}
 """
 
-    send_telegram_message(mensagem_final.strip())
-    return {"status": "Mensagem enviada com sucesso"}, 200
+    print("Mensagem para Telegram:")
+    print(mensagem_final)
 
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    return jsonify({"status": "ok", "mensagem_enviada": mensagem_final})
